@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
@@ -11,17 +12,40 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text bestScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
+    public string playerName;
     
     private bool m_GameOver = false;
 
-    
+    //persist data
+    public static MainManager Instance;
+    public int bestScore;
+    public string bestPlayerName;
+
     // Start is called before the first frame update
     void Start()
     {
+        //Get Best Score data
+        if (StateManager.instance != null)
+        {
+            if (StateManager.instance.bestScore == 0)
+            {
+                bestScoreText.text = "";
+            }
+            else
+            {
+                bestScore = StateManager.instance.bestScore;
+                bestPlayerName = StateManager.instance.bestPlayerName;
+                bestScoreText.text = "Best Score: " + bestPlayerName + ": " + bestScore;
+            }
+
+            playerName = StateManager.instance.playerName;
+        }   
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -72,5 +96,23 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        if (StateManager.instance != null) CheckBestScore();
+    }
+
+    [System.Serializable]
+    class SaveData
+    {
+        public int bestScore;
+        public string bestPlayerName;
+    }
+
+    private void CheckBestScore()
+    {
+        if (m_Points > bestScore)
+        {
+            StateManager.instance.bestScore = m_Points;
+            StateManager.instance.bestPlayerName = playerName;
+            StateManager.instance.SaveBestScore();
+        }
     }
 }
